@@ -34,7 +34,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
 # Serve frontend React build if it exists
-frontend_build_path = os.path.join(os.getcwd(), "frontend", "dist")
+frontend_build_path = os.path.join(os.getcwd(), "dist")
 if os.path.isdir(frontend_build_path):
     fastapi_app.mount("/", StaticFiles(directory=frontend_build_path, html=True), name="frontend")
 
