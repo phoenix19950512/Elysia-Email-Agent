@@ -1,0 +1,8 @@
+[
+    {
+      "name": "General Follow-up",
+      "subject": "Follow-up: {original_subject}",
+      "body": "I'm following up on my previous email regarding {original_subject}. Looking forward to your response."
+    }
+  ]
+  

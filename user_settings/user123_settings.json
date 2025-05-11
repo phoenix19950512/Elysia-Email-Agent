@@ -1,0 +1,22 @@
+{
+  "email_rules": [
+    {
+      "field": "subject",
+      "target_folder": "AQMkADAwATNiZmYAZS05NTY2AC1hYzYxLTAwAi0wMAoALgAAA41cn2V92XhMgYulC5YyeScBABLbt3VbKMJPjLtsr2naQGgAAAIBJQAAAA==",
+      "value": "New sign-in"
+    }
+  ],
+  "templates": [
+    {
+      "name": "General Reply",
+      "subject": "RE: {original_subject}",
+      "body": "Thanks for your email. I'll get back to you shortly."
+    }
+  ],
+  "schedules": [
+    {
+      "name": "Reminder - 3 Days",
+      "days": 3
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+[
+    {
+      "name": "General Reply",
+      "subject": "RE: {original_subject}",
+      "body": "Thank you for your email. I will review it and get back to you soon.\n\nBest regards,<br>Elysia"
+    },
+    {
+      "name": "Call",
+      "subject": "RE: {original_subject}",
+      "body": "I'd like to discuss this over a call. When would be a good time to connect?<br><br>Best regards,<br>Elysia"
+    }
+  ]
+  
