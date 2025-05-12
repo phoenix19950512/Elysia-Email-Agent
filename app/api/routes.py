@@ -47,7 +47,7 @@ async def get_email(email_id: str):
 async def test_graph_connection():
     """Test Microsoft Graph API connection"""
     try:
-        graph_auth = GraphAuth()
+        graph_auth = email_service.auth
         response = graph_auth.make_request("GET", "me")
         return {"status": "connected", "response": response}
     except Exception as e:

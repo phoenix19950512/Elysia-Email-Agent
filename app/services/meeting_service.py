@@ -1,11 +1,11 @@
 import datetime
-from app.auth.graph_auth import GraphAuth
+from app.auth.graph_auth import graph_auth
 from app.models.schema import MeetingDetails, MeetingNotes
 from config import USER_EMAIL
 
 class MeetingService:
     def __init__(self):
-        self.auth = GraphAuth()
+        self.auth = graph_auth
         self.user_email = USER_EMAIL
 
     def get_upcoming_meetings(self, days: int = 7):

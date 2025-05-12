@@ -73,3 +73,5 @@ class GraphAuth:
         if response.content and response.content.strip():
             return response.json()
         return None
+
+graph_auth = GraphAuth()

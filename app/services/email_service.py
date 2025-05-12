@@ -1,13 +1,13 @@
 import json
 import os
 from datetime import datetime
-from app.auth.graph_auth import GraphAuth
+from app.auth.graph_auth import graph_auth
 from app.models.schema import EmailRule, EmailMessage
 from config import USER_EMAIL
 
 class EmailService:
     def __init__(self):
-        self.auth = GraphAuth()
+        self.auth = graph_auth
         self.user_email = USER_EMAIL
 
     def get_emails(self, folder="inbox", max_count=25):
