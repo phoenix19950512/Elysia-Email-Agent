@@ -1,6 +1,3 @@
-# type: ignore
-
-import os
 import groq
 from config import GROQ_API_KEY
 

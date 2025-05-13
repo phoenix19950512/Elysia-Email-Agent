@@ -1,4 +1,3 @@
-# app/services/activity_service.py
 import json
 import os
 from datetime import datetime

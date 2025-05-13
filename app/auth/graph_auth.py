@@ -1,8 +1,6 @@
-# # type: ignore
-
 import msal
 import time
-from config import MS_CLIENT_ID, MS_TENANT_ID
+from config import MS_CLIENT_ID, MS_TENANT_ID, MS_CLIENT_SECRET
 
 class GraphAuth:
     def __init__(self):
