@@ -5,7 +5,7 @@ from fastapi.responses import JSONResponse
 from typing import List, Optional
 import json
 from datetime import datetime
-from app.services.email_service import EmailService
+from app.services.email_service import email_service
 from app.services.meeting_service import MeetingService
 from app.services.file_service import FileService
 from app.services.ai_service import AIService
@@ -15,12 +15,11 @@ import json
 
 # Add to app/api/routes.py
 from app.services.chat_service import ChatService
-from app.services.activity_service import ActivityService
+from app.services.activity_service import activity_service
 
 router = APIRouter()
 
 # Initialize services
-email_service = EmailService()
 meeting_service = MeetingService()
 file_service = FileService()
 ai_service = AIService()
@@ -29,7 +28,7 @@ ai_service = AIService()
 @router.get("/emails")
 async def get_emails(folder: str = "inbox", max_count: int = 25):
     try:
-        emails = email_service.get_emails(folder, max_count)
+        emails = await email_service.get_emails(folder, max_count)
         return {"emails": [email.dict() for email in emails]}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -37,7 +36,7 @@ async def get_emails(folder: str = "inbox", max_count: int = 25):
 @router.get("/emails/{email_id}")
 async def get_email(email_id: str):
     try:
-        email = email_service.get_email_content(email_id)
+        email = await email_service.get_email_content(email_id)
         return email
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -48,7 +47,7 @@ async def test_graph_connection():
     """Test Microsoft Graph API connection"""
     try:
         graph_auth = email_service.auth
-        response = graph_auth.make_request("GET", "me")
+        response = await graph_auth.make_request("GET", "me")
         return {"status": "connected", "response": response}
     except Exception as e:
         return {"status": "error", "message": str(e)}
@@ -57,7 +56,7 @@ async def test_graph_connection():
 @router.get("/folders")
 async def get_folders():
     try:
-        folders = email_service.get_folders()
+        folders = await email_service.get_folders()
         return {"folders": folders}
     except Exception as e:
         error_message = str(e)
@@ -74,7 +73,7 @@ async def get_folders():
 @router.post("/folders")
 async def create_folder(display_name: str = Body(..., embed=True)):
     try:
-        folder = email_service.create_folder(display_name)
+        folder = await email_service.create_folder(display_name)
         return folder
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -82,7 +81,7 @@ async def create_folder(display_name: str = Body(..., embed=True)):
 @router.post("/sort-emails")
 async def sort_emails(rules: List[EmailRule]):
     try:
-        results = email_service.sort_emails(rules)
+        results = await email_service.sort_emails(rules)
         return {"sorted_emails": results}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -95,7 +94,7 @@ async def reply_email(
 ):
     try:
         # Get email content
-        email = email_service.get_email_content(email_id)
+        email = await email_service.get_email_content(email_id)
         
         # Get templates
         templates = email_service.get_templates()
@@ -116,7 +115,7 @@ async def reply_email(
         )
         
         # Send reply
-        result = email_service.send_reply(
+        result = await email_service.send_reply(
             email_id,
             subject,
             customized_reply,
@@ -133,7 +132,7 @@ async def reply_email(
 @router.post("/set-follow-up")
 async def set_follow_up(follow_up: FollowUp):
     try:
-        result = email_service.set_follow_up(
+        result = await email_service.set_follow_up(
             follow_up.email_id,
             follow_up.reminder_date,
             follow_up.note
@@ -154,7 +153,7 @@ async def get_templates():
 @router.get("/meetings")
 async def get_meetings(days: int = 7):
     try:
-        meetings = meeting_service.get_upcoming_meetings(days)
+        meetings = await meeting_service.get_upcoming_meetings(days)
         return {"meetings": [meeting.__dict__ for meeting in meetings]}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -205,7 +204,7 @@ async def send_meeting_follow_up(
         )
         
         # Send follow-up email
-        result = meeting_service.send_meeting_follow_up(meeting_id, meeting_notes)
+        result = await meeting_service.send_meeting_follow_up(meeting_id, meeting_notes)
         
         return result
     except Exception as e:
@@ -235,7 +234,7 @@ async def process_file(file: UploadFile = File(...)):
 async def analyze_email(email_id: str = Body(..., embed=True)):
     try:
         # Get email content
-        email = email_service.get_email_content(email_id)
+        email = await email_service.get_email_content(email_id)
         
         # Extract the email body
         email_content = email.get("body", {}).get("content", "")
@@ -249,7 +248,6 @@ async def analyze_email(email_id: str = Body(..., embed=True)):
 
 # Initialize new services
 chat_service = ChatService()
-activity_service = ActivityService()
 
 # Chat endpoints
 @router.post("/chat")
@@ -290,7 +288,8 @@ async def get_settings(user_id: str):
             settings = {
                 "email_rules": [],
                 "templates": email_service.get_templates(),
-                "schedules": []
+                "schedules": [],
+                "turn_on": True,
             }
         return settings
     except Exception as e:

@@ -50,19 +50,20 @@ class GraphAuth:
             "Content-Type": "application/json"
         }
 
-    def make_request(self, method, endpoint, data=None, params=None):
-        import requests
+    async def make_request(self, method, endpoint, data=None, params=None):
+        import httpx
 
         headers = self.get_headers()
         url = f"https://graph.microsoft.com/v1.0/{endpoint}"
 
-        response = requests.request(
-            method=method,
-            url=url,
-            headers=headers,
-            json=data,
-            params=params
-        )
+        async with httpx.AsyncClient() as client:
+            response = await client.request(
+                method=method,
+                url=url,
+                headers=headers,
+                json=data,
+                params=params
+            )
 
         if response.status_code >= 400:
             print(f"❌ API Error: {response.status_code} - {response.text}")

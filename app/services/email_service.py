@@ -2,7 +2,8 @@ import json
 import os
 from datetime import datetime
 from app.auth.graph_auth import graph_auth
-from app.models.schema import EmailRule, EmailMessage
+from app.models.schema import EmailMessage
+from app.services.activity_service import activity_service
 from config import USER_EMAIL
 
 class EmailService:
@@ -10,7 +11,7 @@ class EmailService:
         self.auth = graph_auth
         self.user_email = USER_EMAIL
 
-    def get_emails(self, folder="inbox", max_count=25):
+    async def get_emails(self, folder="inbox", max_count=25):
         """Get emails from a specific folder"""
         params = {
             "$top": max_count,
@@ -20,7 +21,7 @@ class EmailService:
         
         endpoint = f"me/mailFolders/{folder}/messages"
         # endpoint = f"users/{self.user_email}/mailFolders/{folder}/messages"
-        response = self.auth.make_request("GET", endpoint, params=params)
+        response = await self.auth.make_request("GET", endpoint, params=params)
         
         if response and "value" in response:
             emails = []
@@ -42,15 +43,15 @@ class EmailService:
             return emails
         return []
 
-    def get_email_content(self, email_id):
+    async def get_email_content(self, email_id):
         """Get full content of a specific email"""
         endpoint = f"me/messages/{email_id}"
         # endpoint = f"users/{self.user_email}/messages/{email_id}"
-        response = self.auth.make_request("GET", endpoint)
+        response = await self.auth.make_request("GET", endpoint)
         return response
 
     # In app/services/email_service.py
-    def get_folders(self):
+    async def get_folders(self):
         """Get all mail folders"""
         try:
             endpoint = f"me/mailFolders"
@@ -58,7 +59,7 @@ class EmailService:
             params = {
                 "$top": 100  
             }
-            response = self.auth.make_request("GET", endpoint, params=params)
+            response = await self.auth.make_request("GET", endpoint, params=params)
             print(f"Folders response: {response}") 
             
             if response and "value" in response:
@@ -69,17 +70,17 @@ class EmailService:
             return []
 
 
-    def create_folder(self, display_name):
+    async def create_folder(self, display_name):
         """Create a new mail folder"""
         endpoint = f"me/mailFolders"
         # endpoint = f"users/{self.user_email}/mailFolders"
         data = {
             "displayName": display_name
         }
-        response = self.auth.make_request("POST", endpoint, data=data)
+        response = await self.auth.make_request("POST", endpoint, data=data)
         return response
 
-    def sort_emails(self, rules):
+    async def sort_emails(self, rules):
         """Sort emails based on defined rules"""
         results = []
         
@@ -108,7 +109,7 @@ class EmailService:
             
             endpoint = f"me/mailFolders/inbox/messages"
             # endpoint = f"users/{self.user_email}/mailFolders/inbox/messages"
-            response = self.auth.make_request("GET", endpoint, params=params)
+            response = await self.auth.make_request("GET", endpoint, params=params)
             
             if response and "value" in response:
                 # For body search, filter the results
@@ -118,10 +119,11 @@ class EmailService:
                     emails_to_move = filtered_emails
                 else:
                     emails_to_move = response["value"]
-                
+
                 # Move each email to the target folder
                 for email in emails_to_move:
-                    self.move_email(email["id"], rule.target_folder)
+                    activity_service.log_activity('user123', 'sort_email', f"Sort mail {email["id"]}")
+                    await self.move_email(email["id"], rule.target_folder)
                     results.append({
                         "id": email["id"],
                         "subject": email["subject"],
@@ -130,19 +132,19 @@ class EmailService:
                     
         return results
 
-    def move_email(self, email_id, target_folder):
+    async def move_email(self, email_id, target_folder):
         """Move an email to a specific folder"""
         endpoint = f"me/messages/{email_id}/move"
         # endpoint = f"users/{self.user_email}/messages/{email_id}/move"
         data = {
             "destinationId": target_folder
         }
-        return self.auth.make_request("POST", endpoint, data=data)
+        return await self.auth.make_request("POST", endpoint, data=data)
 
-    def send_reply(self, email_id, subject, body, send_without_approval=False):
+    async def send_reply(self, email_id, subject, body, send_without_approval=False):
         """Send a reply to an email"""
         # First, get the email to reply to
-        email = self.get_email_content(email_id)
+        email = await self.get_email_content(email_id)
         
         # Create reply
         if send_without_approval:
@@ -152,7 +154,8 @@ class EmailService:
             data = {
                 "comment": body
             }
-            return self.auth.make_request("POST", endpoint, data=data)
+            activity_service.log_activity('user123', 'replies_sent', f"Replied to mail {email["id"]}")
+            return await self.auth.make_request("POST", endpoint, data=data)
         else:
             # Create a draft reply
             recipient = email["from"]["emailAddress"]
@@ -171,9 +174,10 @@ class EmailService:
                     }
                 ]
             }
-            return self.auth.make_request("POST", endpoint, data=data)
+            activity_service.log_activity('user123', 'replies_sent', f"Replied to mail {email["id"]}")
+            return await self.auth.make_request("POST", endpoint, data=data)
 
-    def set_follow_up(self, email_id, reminder_date, note=None):
+    async def set_follow_up(self, email_id, reminder_date, note=None):
         """Set a follow-up flag for an email"""
         endpoint = f"me/messages/{email_id}"
 
@@ -195,7 +199,8 @@ class EmailService:
         print(f"📅 Reminder datetime: {reminder_date.isoformat()}")
         print(f"📦 Payload: {data}")
 
-        return self.auth.make_request("PATCH", endpoint, data=data)
+        activity_service.log_activity('user123', 'follow_ups_set', f"Follow up mail {email_id}")
+        return await self.auth.make_request("PATCH", endpoint, data=data)
 
 
     def get_templates(self):
@@ -225,3 +230,5 @@ class EmailService:
         
         with open(template_path, "r") as f:
             return json.load(f)
+
+email_service = EmailService()

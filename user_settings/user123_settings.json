@@ -2,7 +2,7 @@
   "email_rules": [
     {
       "field": "subject",
-      "target_folder": "AQMkADAwATNiZmYAZS05NTY2AC1hYzYxLTAwAi0wMAoALgAAA41cn2V92XhMgYulC5YyeScBABLbt3VbKMJPjLtsr2naQGgAAAIBJQAAAA==",
+      "target_folder": "AQMkADAwATM0MDAAMS03MWIxLTVmMGEtMDACLTAwCgAuAAADkBJ5VH5DeEGD3YFyRcUrsQEAyleoas4fLU2dzqZAt8PW-wAAAPGMHsUAAAA=",
       "value": "New sign-in"
     }
   ],
@@ -18,5 +18,6 @@
       "name": "Reminder - 3 Days",
       "days": 3
     }
-  ]
+  ],
+  "turn_on": false
 }

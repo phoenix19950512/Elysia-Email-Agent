@@ -1,6 +1,7 @@
 import datetime
 from app.auth.graph_auth import graph_auth
 from app.models.schema import MeetingDetails, MeetingNotes
+from app.services.activity_service import activity_service
 from config import USER_EMAIL
 
 class MeetingService:
@@ -8,8 +9,8 @@ class MeetingService:
         self.auth = graph_auth
         self.user_email = USER_EMAIL
 
-    def get_upcoming_meetings(self, days: int = 7):
-        now = datetime.datetime.utcnow()
+    async def get_upcoming_meetings(self, days: int = 7):
+        now = datetime.datetime.now(datetime.timezone.utc)
         end = now + datetime.timedelta(days=days)
         
         print("Getting meetings from", now.isoformat(), "to", end.isoformat())
@@ -21,7 +22,7 @@ class MeetingService:
         }
         print("Graph API params:", params)
 
-        response = self.auth.make_request("GET", "me/calendarView", params=params)
+        response = await self.auth.make_request("GET", "me/calendarView", params=params)
         print("Raw Graph Response:", response)
 
         meetings = []
@@ -52,6 +53,7 @@ class MeetingService:
         return meetings
 
     def join_meeting(self, meeting_url):
+        activity_service.log_activity('user123', 'meetings_joined', f"Joined a meeting: {meeting_url}")
         return {
             "status": "ready_to_join",
             "meeting_url": meeting_url,
@@ -66,9 +68,9 @@ class MeetingService:
         )
         return meeting_notes
 
-    def send_meeting_follow_up(self, meeting_id, meeting_notes):
+    async def send_meeting_follow_up(self, meeting_id, meeting_notes):
         endpoint = f"me/events/{meeting_id}"
-        meeting = self.auth.make_request("GET", endpoint)
+        meeting = await self.auth.make_request("GET", endpoint)
 
         if not meeting:
             return {"error": "Meeting not found"}
@@ -114,7 +116,7 @@ class MeetingService:
             "saveToSentItems": "true"
         }
 
-        response = self.auth.make_request("POST", send_mail_endpoint, data=data)
+        response = await self.auth.make_request("POST", send_mail_endpoint, data=data)
 
         return {
             "status": "email_sent",

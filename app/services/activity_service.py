@@ -12,6 +12,7 @@ class ActivityService:
     
     def log_activity(self, user_id, activity_type, details=None):
         """Log a user activity"""
+        print(details)
         timestamp = datetime.now().isoformat()
         log_file = os.path.join(self.activity_dir, f"{user_id}_activity.json")
         
@@ -59,3 +60,5 @@ class ActivityService:
         }
         
         return summary
+
+activity_service = ActivityService()

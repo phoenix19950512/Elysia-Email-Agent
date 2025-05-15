@@ -3,6 +3,7 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+import asyncio
 import os
 import json
 import socketio
@@ -39,9 +40,10 @@ def setup_templates():
         with open(email_template_path, "w") as f:
             json.dump(default_templates, f, indent=4)
 
-def verify_credentials():
+async def verify_credentials():
     """Verify the Microsoft Graph credentials"""
     try:
+        await asyncio.sleep(60)
         graph_auth.get_token()
         print("\u2705 Microsoft Graph authentication successful.")
         return True
@@ -53,7 +55,7 @@ def verify_credentials():
 async def lifespan(app: FastAPI):
     print("Setting up Email AI Agent...")
     setup_templates()
-    verify_credentials()
+    # asyncio.create_task(verify_credentials())
     print("\n--- Email AI Agent Ready ---")
     print("FastAPI Swagger docs: http://localhost:8000/docs")
     print("WebSocket: Listening on ws://localhost:8000")
