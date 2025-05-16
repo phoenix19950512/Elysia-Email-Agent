@@ -60,7 +60,6 @@ class EmailService:
                 "$top": 100  
             }
             response = await self.auth.make_request("GET", endpoint, params=params)
-            print(f"Folders response: {response}") 
             
             if response and "value" in response:
                 return response.get("value", [])
@@ -86,8 +85,8 @@ class EmailService:
         
         for rule in rules:
             # Get emails matching the rule
-            field = rule.field
-            value = rule.value
+            field = rule.get('field', '')
+            value = rule.get('value', '')
             
             # Build query based on field
             query = None
@@ -101,7 +100,7 @@ class EmailService:
             
             # Get matching emails
             params = {
-                "$search: '{value}'"
+                f"$search: '{value}'"
                 # "$search": query,
                 "$top": 50,
                 "$select": "id,subject,bodyPreview"
@@ -117,17 +116,22 @@ class EmailService:
                     filtered_emails = [email for email in response["value"] 
                                       if value.lower() in email["bodyPreview"].lower()]
                     emails_to_move = filtered_emails
+                elif field == "subject":
+                    filtered_emails = [email for email in response["value"] 
+                                      if value.lower() in email["subject"].lower()]
+                    emails_to_move = filtered_emails
                 else:
                     emails_to_move = response["value"]
 
                 # Move each email to the target folder
                 for email in emails_to_move:
-                    activity_service.log_activity('user123', 'sort_email', f"Sort mail {email["id"]}")
-                    await self.move_email(email["id"], rule.target_folder)
+                    target_folder = rule.get('target_folder', '')
+                    await self.move_email(email["id"], target_folder)
+                    activity_service.log_activity('user123', 'sort_email', f"Sorted mail {email["id"]} to {target_folder}")
                     results.append({
                         "id": email["id"],
                         "subject": email["subject"],
-                        "target_folder": rule.target_folder
+                        "target_folder": target_folder
                     })
                     
         return results

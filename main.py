@@ -9,6 +9,7 @@ import json
 import socketio
 import uvicorn
 from app.auth.graph_auth import graph_auth
+from app.processors.email_processor import email_processor
 
 # Import your routes
 from app.api.routes import router as api_router
@@ -40,22 +41,36 @@ def setup_templates():
         with open(email_template_path, "w") as f:
             json.dump(default_templates, f, indent=4)
 
+async def start_email_processor():
+    """Start the email processor"""
+    await email_processor.start()
+
+def start_background_tasks():
+    """Start background tasks when FastAPI starts"""
+    from threading import Thread
+    
+    def run_processor():
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(start_email_processor())
+
+    thread = Thread(target=run_processor, daemon=True)
+    thread.start()
+
 async def verify_credentials():
     """Verify the Microsoft Graph credentials"""
     try:
         await asyncio.sleep(60)
-        graph_auth.get_token()
-        print("\u2705 Microsoft Graph authentication successful.")
+        start_background_tasks()
         return True
     except Exception as e:
-        print(f"\u274C Microsoft Graph authentication failed: {str(e)}")
         return False
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("Setting up Email AI Agent...")
     setup_templates()
-    # asyncio.create_task(verify_credentials())
+    asyncio.create_task(verify_credentials())
     print("\n--- Email AI Agent Ready ---")
     print("FastAPI Swagger docs: http://localhost:8000/docs")
     print("WebSocket: Listening on ws://localhost:8000")

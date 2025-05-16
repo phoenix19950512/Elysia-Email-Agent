@@ -16,14 +16,13 @@ class MeetingService:
         print("Getting meetings from", now.isoformat(), "to", end.isoformat())
 
         params = {
-            "startDateTime": now.isoformat() + "Z",
-            "endDateTime": end.isoformat() + "Z",
+            "startDateTime": now.isoformat().split('.')[0] + "Z",
+            "endDateTime": end.isoformat().split('.')[0] + "Z",
             "$orderby": "start/dateTime"
         }
         print("Graph API params:", params)
 
         response = await self.auth.make_request("GET", "me/calendarView", params=params)
-        print("Raw Graph Response:", response)
 
         meetings = []
         for event in response.get("value", []):
