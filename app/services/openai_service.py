@@ -121,6 +121,6 @@ class OpenAIService:
         {email_content}
         ```
         
-        Return only target folder's id"""
+        Return only target folder's id. Don't include your any explanation."""
 
 openai_service = OpenAIService()
