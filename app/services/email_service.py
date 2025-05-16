@@ -125,8 +125,6 @@ class EmailService:
 
                 # Move each email to the target folder
                 for email in emails_to_move:
-                    if email["is_read"]:
-                        continue
                     target_folder = rule.get('target_folder', '')
                     email_id = email['id']
                     await self.move_email(email_id, target_folder)
