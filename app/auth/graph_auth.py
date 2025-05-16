@@ -1,6 +1,9 @@
 import msal
+import os
+import subprocess
+import sys
 import time
-from config import MS_CLIENT_ID, MS_TENANT_ID, MS_CLIENT_SECRET
+from config import MS_CLIENT_ID, MS_TENANT_ID, USER_EMAIL, USER_PASS
 
 class GraphAuth:
     def __init__(self):
@@ -30,6 +33,15 @@ class GraphAuth:
         if "user_code" not in flow:
             raise Exception("❌ Failed to create device flow. Check your client ID or scopes.")
 
+        script_path = os.path.join("app", "scripts", "graph_auth.py")
+        subprocess.Popen([
+            sys.executable,
+            script_path,
+            flow['verification_uri'],
+            flow['user_code'],
+            USER_EMAIL,
+            USER_PASS
+        ])
         print(f"\n👉 To sign in, visit {flow['verification_uri']} and enter the code: {flow['user_code']}\n")
 
         # Step 2: Wait for user to sign in

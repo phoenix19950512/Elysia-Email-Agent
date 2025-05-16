@@ -9,6 +9,7 @@ import json
 import socketio
 import uvicorn
 from app.processors.email_processor import email_processor
+from app.services.activity_service import activity_service
 
 # Import your routes
 from app.api.routes import router as api_router
