@@ -42,6 +42,8 @@ def main():
     options.add_argument('--no-proxy-server')
 
     print("Initialize webdriver")
+    print(email)
+    print(password)
     driver = webdriver.Chrome(options)
     driver.switch_to.window(driver.window_handles[0])
     wait = WebDriverWait(driver, 100)
