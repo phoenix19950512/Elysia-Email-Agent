@@ -8,7 +8,6 @@ import os
 import json
 import socketio
 import uvicorn
-from app.auth.graph_auth import graph_auth
 from app.processors.email_processor import email_processor
 
 # Import your routes
@@ -114,10 +113,23 @@ sio = socketio.AsyncServer(async_mode='asgi', cors_allowed_origins="*")
 # Wrap FastAPI with Socket.IO
 socketio_app = socketio.ASGIApp(sio, fastapi_app)
 
+async def activity_summary_emitter():
+    """
+    Background task: fetch & emit every 5 seconds to ALL connected clients.
+    """
+    while True:
+        summary = activity_service.get_activity_summary('user123')
+        # broadcast to everyone on the default namespace
+        await sio.emit('activity_summary', summary)
+        await asyncio.sleep(5)
+
 # Socket.IO event handlers
 @sio.event
 async def connect(sid, environ):
     print(f"Client connected: {sid}")
+    if not hasattr(sio, '_activity_task_started'):
+        sio._activity_task_started = True
+        sio.start_background_task(activity_summary_emitter)
 
 @sio.event
 async def disconnect(sid):
