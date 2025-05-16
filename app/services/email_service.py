@@ -4,6 +4,7 @@ from datetime import datetime
 from app.auth.graph_auth import graph_auth
 from app.models.schema import EmailMessage
 from app.services.activity_service import activity_service
+from app.services.openai_service import openai_service
 from config import USER_EMAIL
 
 class EmailService:
@@ -79,62 +80,22 @@ class EmailService:
         response = await self.auth.make_request("POST", endpoint, data=data)
         return response
 
-    async def sort_emails(self, rules):
-        """Sort emails based on defined rules"""
+    async def sort_emails(self, folders, emails):
+        """Sort emails based on existing folders"""
         results = []
-        
-        for rule in rules:
-            # Get emails matching the rule
-            field = rule.get('field', '')
-            value = rule.get('value', '')
-            
-            # Build query based on field
-            query = None
-            if field == "subject":
-                query = f"subject:'{value}'"
-            elif field == "from":
-                query = f"from:'{value}'"
-            elif field == "body":
-                # Body search is limited in Microsoft Graph, so we'll retrieve and filter afterward
-                query = ""
-            
-            # Get matching emails
-            params = {
-                f"$search: '{value}'"
-                # "$search": query,
-                "$top": 50,
-                "$select": "id,subject,bodyPreview"
-            }
-            
-            endpoint = f"me/mailFolders/inbox/messages"
-            # endpoint = f"users/{self.user_email}/mailFolders/inbox/messages"
-            response = await self.auth.make_request("GET", endpoint, params=params)
-            
-            if response and "value" in response:
-                # For body search, filter the results
-                if field == "body":
-                    filtered_emails = [email for email in response["value"] 
-                                      if value.lower() in email["bodyPreview"].lower()]
-                    emails_to_move = filtered_emails
-                elif field == "subject":
-                    filtered_emails = [email for email in response["value"] 
-                                      if value.lower() in email["subject"].lower()]
-                    emails_to_move = filtered_emails
-                else:
-                    emails_to_move = response["value"]
 
-                # Move each email to the target folder
-                for email in emails_to_move:
-                    target_folder = rule.get('target_folder', '')
-                    email_id = email['id']
-                    await self.move_email(email_id, target_folder)
-                    activity_service.log_activity('user123', 'sort_email', f"Sorted mail {email_id} to {target_folder}")
-                    results.append({
-                        "id": email_id,
-                        "subject": email['subject'],
-                        "target_folder": target_folder
-                    })
-                    
+        for email in emails:
+            prompt = openai_service.generate_sort_mail_prompt(folders, email.subject, str(email.body))
+            messages = [{'role': 'user', 'content': prompt}]
+            target_folder = await openai_service.get_openai_response(messages)
+            email_id = email.id
+            await self.move_email(email_id, target_folder)
+            activity_service.log_activity('user123', 'sort_email', f"Sorted mail {email_id} to {target_folder}")
+            results.append({
+                "id": email_id,
+                "subject": email.subject,
+                "target_folder": target_folder
+            })
         return results
 
     async def move_email(self, email_id, target_folder):
@@ -146,10 +107,14 @@ class EmailService:
         }
         return await self.auth.make_request("POST", endpoint, data=data)
 
-    async def send_reply(self, email_id, subject, body, send_without_approval=False):
+    async def send_reply(self, email_id, template, send_without_approval=False):
         """Send a reply to an email"""
         # First, get the email to reply to
         email = await self.get_email_content(email_id)
+        subject = email.get("subject", "")
+        prompt = openai_service.generate_reply_prompt(template, subject, email.get("body", {}).get("content", ""))
+        messages = [{'role': 'user', 'content': prompt}]
+        response = await openai_service.get_openai_response(messages)
         
         # Create reply
         if send_without_approval:
@@ -157,7 +122,7 @@ class EmailService:
             endpoint = f"me/messages/{email_id}/reply"
             # endpoint = f"users/{self.user_email}/messages/{email_id}/reply"
             data = {
-                "comment": body
+                "comment": response
             }
             activity_service.log_activity('user123', 'send_reply', f"Replied to mail {email_id}")
             return await self.auth.make_request("POST", endpoint, data=data)
@@ -171,7 +136,7 @@ class EmailService:
                 "subject": f"RE: {subject}",
                 "body": {
                     "contentType": "HTML",
-                    "content": body
+                    "content": response
                 },
                 "toRecipients": [
                     {

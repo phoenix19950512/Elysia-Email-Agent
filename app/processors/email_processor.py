@@ -54,8 +54,7 @@ class EmailProcessor:
                             print("Replying email")
                             await email_service.send_reply(
                                 email_id=email.id,
-                                subject=email.subject,
-                                body=templates[random.randint(0, len(templates) - 1)].get("body", ""),
+                                template=templates[random.randint(0, len(templates) - 1)],
                                 send_without_approval=True
                             )
                         except Exception as e:
@@ -72,12 +71,14 @@ class EmailProcessor:
                         except Exception as e:
                             print(e)
 
-                    del emails
                     print("Sorting emails")
                     try:
-                        await email_service.sort_emails(email_rules)
+                        await email_service.sort_emails(folders, emails)
                     except Exception as e:
                         print(e)
+
+                    del emails
+
                 else:
                     print("Setting is turned off")
 

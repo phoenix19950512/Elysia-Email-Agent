@@ -7,7 +7,7 @@ opencv-python==4.11.0.86
 pytesseract==0.3.13
 pdfminer==20191125
 pdfminer.six==20250506
-groq==0.24.0
+openai==1.78.1
 python-multipart==0.0.20
 selenium==4.32.0
 deepgram-sdk==4.1.0

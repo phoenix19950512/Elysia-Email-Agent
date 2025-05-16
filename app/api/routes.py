@@ -8,7 +8,7 @@ from datetime import datetime
 from app.services.email_service import email_service
 from app.services.meeting_service import MeetingService
 from app.services.file_service import FileService
-from app.services.ai_service import AIService
+from app.services.openai_service import openai_service
 from app.models.schema import EmailRule, EmailTemplate, FollowUp
 import os
 import json
@@ -22,7 +22,6 @@ router = APIRouter()
 # Initialize services
 meeting_service = MeetingService()
 file_service = FileService()
-ai_service = AIService()
 
 # Email endpoints
 @router.get("/emails")
@@ -78,13 +77,13 @@ async def create_folder(display_name: str = Body(..., embed=True)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.post("/sort-emails")
-async def sort_emails(rules: List[EmailRule]):
-    try:
-        results = await email_service.sort_emails(rules)
-        return {"sorted_emails": results}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+# @router.post("/sort-emails")
+# async def sort_emails(rules: List[EmailRule]):
+#     try:
+#         results = await email_service.sort_emails(rules)
+#         return {"sorted_emails": results}
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/reply-email")
 async def reply_email(
@@ -93,9 +92,6 @@ async def reply_email(
     send_without_approval: bool = Form(False)
 ):
     try:
-        # Get email content
-        email = await email_service.get_email_content(email_id)
-        
         # Get templates
         templates = email_service.get_templates()
         
@@ -104,21 +100,10 @@ async def reply_email(
         if not template:
             raise HTTPException(status_code=404, detail="Template not found")
         
-        # Generate personalized reply using AI
-        email_content = email.get("body", {}).get("content", "")
-        subject = email.get("subject", "")
-        
-        customized_reply = ai_service.generate_email_reply(
-            email_content, 
-            template_name, 
-            template["body"]
-        )
-        
         # Send reply
         result = await email_service.send_reply(
             email_id,
-            subject,
-            customized_reply,
+            template,
             send_without_approval
         )
         
@@ -222,7 +207,7 @@ async def process_file(file: UploadFile = File(...)):
         
         # Generate a summary using AI
         if result.extracted_text:
-            summary = ai_service.summarize_document(result.extracted_text)
+            summary = await openai_service.summarize_document(result.extracted_text)
             result.summary = summary
         
         return {"status": "file_processed", "result": result.__dict__}
@@ -240,7 +225,7 @@ async def analyze_email(email_id: str = Body(..., embed=True)):
         email_content = email.get("body", {}).get("content", "")
         
         # Analyze the email
-        analysis = ai_service.analyze_email(email_content)
+        analysis = await openai_service.analyze_email(email_content)
         
         return {"analysis": analysis}
     except Exception as e:
@@ -253,7 +238,7 @@ chat_service = ChatService()
 @router.post("/chat")
 async def chat(user_id: str = Body(...), message: str = Body(...)):
     try:
-        response = chat_service.process_message(user_id, message)
+        response = await chat_service.process_message(user_id, message)
         return {"response": response}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

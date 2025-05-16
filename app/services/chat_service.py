@@ -1,24 +1,23 @@
 import json
 import os
 from datetime import datetime
-from app.services.ai_service import AIService
+from app.services.openai_service import openai_service
 
 class ChatService:
     def __init__(self):
-        self.ai_service = AIService()
         self.chat_history_dir = os.path.join(os.getcwd(), "chat_history")
         
         # Create chat history directory if it doesn't exist
         if not os.path.exists(self.chat_history_dir):
             os.makedirs(self.chat_history_dir)
     
-    def process_message(self, user_id, message):
+    async def process_message(self, user_id, message):
         """Process a user message and generate a response"""
         # Save to chat history
         self.save_to_history(user_id, "user", message)
         
         # Process with AI
-        response = self.ai_service.process_chat_message(message)
+        response = await openai_service.process_chat_message(message)
         
         # Save AI response to history
         self.save_to_history(user_id, "ai", response)

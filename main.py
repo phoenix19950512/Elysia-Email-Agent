@@ -11,6 +11,7 @@ import uvicorn
 from app.processors.email_processor import email_processor
 from app.services.activity_service import activity_service
 from app.services.dg_service import finish_deepgram, process_audio_chunk
+from app.services.openai_service import openai_service
 
 # Import your routes
 from app.api.routes import router as api_router
@@ -141,9 +142,7 @@ async def disconnect(sid):
 @sio.event
 async def chat_message(sid, data):
     print(f"Received message from {sid}: {data['message']}")
-    from app.services.ai_service import AIService
-    ai_service = AIService()
-    response = ai_service.process_chat_message(data['message'])
+    response = await openai_service.process_chat_message(data['message'])
     await sio.emit('chat_response', {'response': response}, room=sid)
 
 @sio.event

@@ -28,4 +28,4 @@ DEEPGRAM_API_KEY = os.getenv("DEEPGRAM_API_KEY")
 GRAPH_SCOPES = ["https://graph.microsoft.com/.default"]
 
 # Groq API settings
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
