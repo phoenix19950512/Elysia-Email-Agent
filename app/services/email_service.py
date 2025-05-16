@@ -159,7 +159,7 @@ class EmailService:
             data = {
                 "comment": body
             }
-            activity_service.log_activity('user123', 'send_reply', f"Replied to mail {email["id"]}")
+            activity_service.log_activity('user123', 'send_reply', f"Replied to mail {email_id}")
             return await self.auth.make_request("POST", endpoint, data=data)
         else:
             # Create a draft reply
@@ -179,7 +179,7 @@ class EmailService:
                     }
                 ]
             }
-            activity_service.log_activity('user123', 'send_reply', f"Replied to mail {email["id"]}")
+            activity_service.log_activity('user123', 'send_reply', f"Replied to mail {email_id}")
             return await self.auth.make_request("POST", endpoint, data=data)
 
     async def set_follow_up(self, email_id, reminder_date, note=None):
@@ -199,10 +199,6 @@ class EmailService:
                 }
             }
         }
-
-        print(f"🔔 Setting follow-up for: {email_id}")
-        print(f"📅 Reminder datetime: {reminder_date.isoformat()}")
-        print(f"📦 Payload: {data}")
 
         activity_service.log_activity('user123', 'set_follow_up', f"Follow up mail {email_id}")
         return await self.auth.make_request("PATCH", endpoint, data=data)
