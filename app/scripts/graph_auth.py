@@ -35,7 +35,14 @@ def main():
     email = args.email
     password = args.password
 
+    print('installing service')
+    driver_manager = ChromeDriverManager()
+    service = Service(driver_manager.install())
+    driver_path = driver_manager._get_driver_binary_path(driver_manager.driver)
+
+    print('initialize driver')
     options = Options()
+    options.binary_location = driver_path
     options.add_argument("--no-sandbox")
     options.add_argument("--headless")
     options.add_argument("--window-size=1920,1080")
@@ -44,11 +51,6 @@ def main():
     options.add_argument('--no-proxy-server')
     options.add_argument("--disable-dev-shm-usage")
 
-    print('installing service')
-    driver_manager = ChromeDriverManager()
-    service = Service(driver_manager.install())
-    print(driver_manager._get_driver_binary_path(driver_manager.driver))
-    print('initialize driver')
     driver = webdriver.Chrome(options=options, service=service)
     driver.switch_to.window(driver.window_handles[0])
     wait = WebDriverWait(driver, 60)
