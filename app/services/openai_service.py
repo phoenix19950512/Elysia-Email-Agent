@@ -86,6 +86,8 @@ class OpenAIService:
         return f"""
         You need to customize the following email template to create a personalized reply
         to the email content below. Maintain a professional tone.
+        Don't select Inbox as all emails are transfered from there.
+        Don't include single or double quota in the result.
         
         Template name: {template.get("name", "(No Name)")}
         Template subject: {template.get("subject", "(No subject)")}
