@@ -48,6 +48,8 @@ class EmailProcessor:
                     emails = await email_service.get_emails(folder['id'])
                     print(f"{len(emails)} emails found.")
                     for email in emails:
+                        if email.is_read:
+                            continue
                         try:
                             print("Replying email")
                             await email_service.send_reply(
