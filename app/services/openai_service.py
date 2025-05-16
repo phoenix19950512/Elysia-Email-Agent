@@ -86,6 +86,8 @@ class OpenAIService:
         return f"""
         You need to customize the following email template to create a personalized reply
         to the email content below. Maintain a professional tone.
+        No need to add a subject. Don't include client't and my names.
+        Start and end with greetings.
         
         Template name: {template.get("name", "(No Name)")}
         Template subject: {template.get("subject", "(No subject)")}
