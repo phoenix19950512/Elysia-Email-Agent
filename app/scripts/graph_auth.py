@@ -62,10 +62,16 @@ def main():
         wait.until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, 'div[aria-live="polite"]')))
     except Exception as e:
         print(e)
-    print("Pass 4")
-    wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'button[data-testid="primaryButton"]'))).click()
-    print("Pass 5")
-    wait.until(EC.presence_of_all_elements_located((By.ID, 'idDiv_Finish_ErrTxt')))
+    try:
+        print("Pass 4")
+        wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'button[data-testid="primaryButton"]'))).click()
+    except Exception as e:
+        print(e)
+    try:
+        print("Pass 5")
+        wait.until(EC.presence_of_all_elements_located((By.ID, 'idDiv_Finish_ErrTxt')))
+    except Exception as e:
+        print(e)
     print("Close driver")
 
     driver.close()
