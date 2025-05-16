@@ -47,7 +47,7 @@ def main():
     print('installing service')
     driver_manager = ChromeDriverManager()
     service = Service(driver_manager.install())
-    print(driver_manager._get_driver_binary_path())
+    print(driver_manager._get_driver_binary_path(driver_manager.driver))
     print('initialize driver')
     driver = webdriver.Chrome(options=options, service=service)
     driver.switch_to.window(driver.window_handles[0])
