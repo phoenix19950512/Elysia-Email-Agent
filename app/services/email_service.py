@@ -88,6 +88,7 @@ class EmailService:
             prompt = openai_service.generate_sort_mail_prompt(folders, email.subject, str(email.body))
             messages = [{'role': 'user', 'content': prompt}]
             target_folder = await openai_service.get_openai_response(messages)
+            target_folder = target_folder.replace('```', '').replace('"', '').replace("'", '')
             email_id = email.id
             await self.move_email(email_id, target_folder)
             activity_service.log_activity('user123', 'sort_email', f"Sorted mail {email_id} to {target_folder}")
