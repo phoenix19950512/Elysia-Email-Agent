@@ -48,20 +48,32 @@ class EmailProcessor:
                     emails = await email_service.get_emails(folder['id'])
                     print(f"{len(emails)} emails found.")
                     for email in emails:
-                        await email_service.send_reply(
-                            email_id=email.id,
-                            subject=email.subject,
-                            body=templates[random.randint(0, len(templates) - 1)].get("body", ""),
-                            send_without_approval=True
-                        )
-                        for schedule in followup_schedules:
-                            days = schedule.get('days', 3)
-                            reminder_date = datetime.now(timezone.utc) + timedelta(days=days)
-                            await email_service.set_follow_up(
+                        try:
+                            print("Replying email")
+                            await email_service.send_reply(
                                 email_id=email.id,
-                                reminder_date=reminder_date
+                                subject=email.subject,
+                                body=templates[random.randint(0, len(templates) - 1)].get("body", ""),
+                                send_without_approval=True
                             )
-                    await email_service.sort_emails(email_rules)
+                        except Exception as e:
+                            print(e)
+                        try:
+                            print("Setting flag")
+                            for schedule in followup_schedules:
+                                days = schedule.get('days', 3)
+                                reminder_date = datetime.now(timezone.utc) + timedelta(days=days)
+                                await email_service.set_follow_up(
+                                    email_id=email.id,
+                                    reminder_date=reminder_date
+                                )
+                        except Exception as e:
+                            print(e)
+                    print("Sorting emails")
+                    try:
+                        await email_service.sort_emails(email_rules)
+                    except Exception as e:
+                        print(e)
                 else:
                     print("Setting is turned off")
 

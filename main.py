@@ -61,7 +61,7 @@ def start_background_tasks():
 async def verify_credentials():
     """Verify the Microsoft Graph credentials"""
     try:
-        await asyncio.sleep(60)
+        await asyncio.sleep(400)
         start_background_tasks()
         return True
     except Exception as e:

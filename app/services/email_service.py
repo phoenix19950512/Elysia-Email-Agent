@@ -126,11 +126,12 @@ class EmailService:
                 # Move each email to the target folder
                 for email in emails_to_move:
                     target_folder = rule.get('target_folder', '')
-                    await self.move_email(email["id"], target_folder)
-                    activity_service.log_activity('user123', 'sort_email', f"Sorted mail {email["id"]} to {target_folder}")
+                    email_id = email['id']
+                    await self.move_email(email_id, target_folder)
+                    activity_service.log_activity('user123', 'sort_email', f"Sorted mail {email_id} to {target_folder}")
                     results.append({
-                        "id": email["id"],
-                        "subject": email["subject"],
+                        "id": email_id,
+                        "subject": email['subject'],
                         "target_folder": target_folder
                     })
                     
