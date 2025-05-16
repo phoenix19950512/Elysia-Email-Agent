@@ -52,7 +52,7 @@ class MeetingService:
         return meetings
 
     def join_meeting(self, meeting_url):
-        activity_service.log_activity('user123', 'meetings_joined', f"Joined a meeting: {meeting_url}")
+        activity_service.log_activity('user123', 'join_meeting', f"Joined a meeting: {meeting_url}")
         return {
             "status": "ready_to_join",
             "meeting_url": meeting_url,
