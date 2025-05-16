@@ -55,8 +55,11 @@ def main():
     print("Pass 2")
     wait.until(EC.element_to_be_clickable((By.ID, "passwordEntry"))).send_keys(password)
     wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "button[type=\"submit\"]"))).click()
-    print("Pass 3")
-    wait.until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, 'div[aria-live="polite"]')))
+    try:
+        print("Pass 3")
+        wait.until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, 'div[aria-live="polite"]')))
+    except Exception as e:
+        print(e)
     print("Pass 4")
     wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'button[data-testid="primaryButton"]'))).click()
     print("Pass 5")
