@@ -10,6 +10,7 @@ import socketio
 import uvicorn
 from app.processors.email_processor import email_processor
 from app.services.activity_service import activity_service
+from app.services.dg_service import finish_deepgram, process_audio_chunk
 
 # Import your routes
 from app.api.routes import router as api_router
@@ -135,6 +136,7 @@ async def connect(sid, environ):
 @sio.event
 async def disconnect(sid):
     print(f"Client disconnected: {sid}")
+    await finish_deepgram(sio=sio, sid=sid)
 
 @sio.event
 async def chat_message(sid, data):
@@ -143,6 +145,10 @@ async def chat_message(sid, data):
     ai_service = AIService()
     response = ai_service.process_chat_message(data['message'])
     await sio.emit('chat_response', {'response': response}, room=sid)
+
+@sio.event
+async def audio_chunk(sid, data: bytes):
+    await process_audio_chunk(sio=sio, sid=sid, data=data)
 
 if __name__ == "__main__":
     uvicorn.run(

@@ -9,3 +9,5 @@ pdfminer==20191125
 pdfminer.six==20250506
 groq==0.24.0
 python-multipart==0.0.20
+selenium==4.32.0
+deepgram-sdk==4.1.0

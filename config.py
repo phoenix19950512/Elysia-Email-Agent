@@ -13,6 +13,7 @@ MS_TENANT_ID = os.getenv("MS_TENANT_ID")
 MS_REDIRECT_URI = os.getenv("MS_REDIRECT_URI")
 USER_EMAIL = os.getenv("USER_EMAIL")
 USER_PASS = os.getenv("USER_PASS")
+DEEPGRAM_API_KEY = os.getenv("DEEPGRAM_API_KEY")
 
 # # Graph API scopes
 # GRAPH_SCOPES = [
