@@ -51,7 +51,7 @@ def main():
     options.add_argument('--no-proxy-server')
     options.add_argument("--disable-dev-shm-usage")
 
-    driver = webdriver.Chrome(options=options, service=service)
+    driver = webdriver.Chrome(options=options)
     driver.switch_to.window(driver.window_handles[0])
     wait = WebDriverWait(driver, 60)
     driver.get(url)
