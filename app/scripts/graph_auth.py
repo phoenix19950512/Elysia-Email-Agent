@@ -36,6 +36,7 @@ def main():
     password = args.password
 
     options = Options()
+    options.binary_location = "/usr/bin/chromium"
     options.add_argument("--headless")
     options.add_argument("--window-size=1920,1080")
     options.add_argument("--no-sandbox")
