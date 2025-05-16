@@ -11,3 +11,4 @@ groq==0.24.0
 python-multipart==0.0.20
 selenium==4.32.0
 deepgram-sdk==4.1.0
+webdriver_manager==4.0.2

@@ -2,9 +2,11 @@ import argparse
 import sys
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from webdriver_manager.chrome import ChromeDriverManager
 
 def main():
     parser = argparse.ArgumentParser(
@@ -34,14 +36,18 @@ def main():
     password = args.password
 
     options = Options()
-    options.add_argument("--headless")
+    # options.add_argument("--headless")
     options.add_argument("--window-size=1920,1080")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-gpu")
     options.add_argument("--log-level=3")
     options.add_argument('--no-proxy-server')
+    options.add_argument("--disable-dev-shm-usage")
 
-    driver = webdriver.Chrome(options)
+    print('installing service')
+    service = Service(ChromeDriverManager().install())
+    print('initialize driver')
+    driver = webdriver.Chrome(options=options, service=service)
     driver.switch_to.window(driver.window_handles[0])
     wait = WebDriverWait(driver, 60)
     driver.get(url)
