@@ -86,8 +86,6 @@ class OpenAIService:
         return f"""
         You need to customize the following email template to create a personalized reply
         to the email content below. Maintain a professional tone.
-        Don't select default folders of Microsoft Outlook.
-        Don't include single or double quota in the result.
         
         Template name: {template.get("name", "(No Name)")}
         Template subject: {template.get("subject", "(No subject)")}
@@ -109,6 +107,8 @@ class OpenAIService:
         return f"""
         You need to return only target folder's id according to the email.
         Select the target folder only in these folders.
+        Don't select default folders of Microsoft Outlook.
+        Don't include single or double quota in the result.
         
         Folders:
         ```
