@@ -71,6 +71,8 @@ class EmailProcessor:
                                 )
                         except Exception as e:
                             print(e)
+
+                    del emails
                     print("Sorting emails")
                     try:
                         await email_service.sort_emails(email_rules)
