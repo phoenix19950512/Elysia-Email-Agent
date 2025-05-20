@@ -6,7 +6,7 @@ from app.services.supabase_service import supabase_service
 
 class GraphAuth:
     def __init__(self, email: str, token: str, refresh_token: str = None):
-        self.authority = f"https://login.microsoftonline.com/{MS_TENANT_ID or "consumers"}"
+        self.authority = f"https://login.microsoftonline.com/{MS_TENANT_ID or 'consumers'}"
         self.scopes = [
             "Mail.ReadWrite",
             "Mail.Send",
