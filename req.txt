@@ -1,0 +1,14 @@
+fastapi
+python-dotenv
+msal
+python-socketio
+uvicorn
+opencv-python
+pytesseract
+pdfminer
+pdfminer.six
+groq
+python-multipart
+selenium
+deepgram-sdk
+pydantic[email]
