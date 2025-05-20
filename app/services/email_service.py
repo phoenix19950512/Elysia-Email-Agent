@@ -1,27 +1,25 @@
 import json
 import os
 from datetime import datetime
-from app.auth.graph_auth import graph_auth
+from app.auth.graph_auth import GraphAuth
 from app.models.schema import EmailMessage
-from app.services.activity_service import activity_service
 from app.services.openai_service import openai_service
-from config import USER_EMAIL
+from app.services.supabase_service import supabase_service
 
 class EmailService:
-    def __init__(self):
+    def __init__(self, graph_auth: GraphAuth):
         self.auth = graph_auth
-        self.user_email = USER_EMAIL
 
-    async def get_emails(self, folder="inbox", max_count=25):
+    async def get_emails(self, folder="inbox", max_count=None):
         """Get emails from a specific folder"""
         params = {
-            "$top": max_count,
             "$orderby": "receivedDateTime DESC",
             "$select": "id,subject,bodyPreview,from,toRecipients,ccRecipients,receivedDateTime,importance,isRead,hasAttachments"
         }
+        if max_count:
+            params["$top"] = max_count
         
         endpoint = f"me/mailFolders/{folder}/messages"
-        # endpoint = f"users/{self.user_email}/mailFolders/{folder}/messages"
         response = await self.auth.make_request("GET", endpoint, params=params)
         
         if response and "value" in response:
@@ -47,8 +45,13 @@ class EmailService:
     async def get_email_content(self, email_id):
         """Get full content of a specific email"""
         endpoint = f"me/messages/{email_id}"
-        # endpoint = f"users/{self.user_email}/messages/{email_id}"
         response = await self.auth.make_request("GET", endpoint)
+        return response
+    
+    async def delete_email(self, email_id):
+        """Delete an email"""
+        endpoint = f"me/messages/{email_id}"
+        response = await self.auth.make_request("DELETE", endpoint)
         return response
 
     # In app/services/email_service.py
@@ -56,9 +59,8 @@ class EmailService:
         """Get all mail folders"""
         try:
             endpoint = f"me/mailFolders"
-            # endpoint = f"users/{self.user_email}/mailFolders"
             params = {
-                "$top": 100  
+                "$top": 100
             }
             response = await self.auth.make_request("GET", endpoint, params=params)
             
@@ -73,7 +75,6 @@ class EmailService:
     async def create_folder(self, display_name):
         """Create a new mail folder"""
         endpoint = f"me/mailFolders"
-        # endpoint = f"users/{self.user_email}/mailFolders"
         data = {
             "displayName": display_name
         }
@@ -91,7 +92,7 @@ class EmailService:
             target_folder = target_folder.replace('```', '').replace('"', '').replace("'", '')
             email_id = email.id
             await self.move_email(email_id, target_folder)
-            activity_service.log_activity('user123', 'sort_email', f"Sorted mail {email_id} to {target_folder}")
+            supabase_service.log_activity(self.auth.email, 'sort_email', f"Sorted mail {email_id} to {target_folder}")
             results.append({
                 "id": email_id,
                 "subject": email.subject,
@@ -102,7 +103,6 @@ class EmailService:
     async def move_email(self, email_id, target_folder):
         """Move an email to a specific folder"""
         endpoint = f"me/messages/{email_id}/move"
-        # endpoint = f"users/{self.user_email}/messages/{email_id}/move"
         data = {
             "destinationId": target_folder
         }
@@ -121,18 +121,16 @@ class EmailService:
         if send_without_approval:
             # Send without approval
             endpoint = f"me/messages/{email_id}/reply"
-            # endpoint = f"users/{self.user_email}/messages/{email_id}/reply"
             data = {
                 "comment": response
             }
-            activity_service.log_activity('user123', 'send_reply', f"Replied to mail {email_id}")
+            supabase_service.log_activity(self.auth.email, 'send_reply', f"Replied to mail {email_id}")
             return await self.auth.make_request("POST", endpoint, data=data)
         else:
             # Create a draft reply
             recipient = email["from"]["emailAddress"]
             
             endpoint = f"me/messages"
-            # endpoint = f"users/{self.user_email}/messages"
             data = {
                 "subject": f"RE: {subject}",
                 "body": {
@@ -145,7 +143,7 @@ class EmailService:
                     }
                 ]
             }
-            activity_service.log_activity('user123', 'send_reply', f"Replied to mail {email_id}")
+            supabase_service.log_activity(self.auth.email, 'send_reply', f"Replied to mail {email_id}")
             return await self.auth.make_request("POST", endpoint, data=data)
 
     async def set_follow_up(self, email_id, reminder_date, note=None):
@@ -166,7 +164,7 @@ class EmailService:
             }
         }
 
-        activity_service.log_activity('user123', 'set_follow_up', f"Follow up mail {email_id}")
+        supabase_service.log_activity(self.auth.email, 'set_follow_up', f"Follow up mail {email_id}")
         return await self.auth.make_request("PATCH", endpoint, data=data)
 
 
@@ -197,5 +195,3 @@ class EmailService:
         
         with open(template_path, "r") as f:
             return json.load(f)
-
-email_service = EmailService()

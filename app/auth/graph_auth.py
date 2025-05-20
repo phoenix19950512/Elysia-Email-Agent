@@ -1,16 +1,12 @@
+import httpx
 import msal
-import os
-import subprocess
-import sys
-import time
-from config import MS_CLIENT_ID, MS_TENANT_ID, USER_EMAIL, USER_PASS
+from fastapi import HTTPException
+from config import MS_CLIENT_ID, MS_TENANT_ID
+from app.services.supabase_service import supabase_service
 
 class GraphAuth:
-    def __init__(self):
-        self.client_id = MS_CLIENT_ID
-        self.tenant_id = MS_TENANT_ID or "consumers"
-        # self.authority = f"https://login.microsoftonline.com/consumers"
-        self.authority = f"https://login.microsoftonline.com/{self.tenant_id}"
+    def __init__(self, email: str, token: str, refresh_token: str = None):
+        self.authority = f"https://login.microsoftonline.com/{MS_TENANT_ID or "consumers"}"
         self.scopes = [
             "Mail.ReadWrite",
             "Mail.Send",
@@ -19,53 +15,52 @@ class GraphAuth:
             "Files.ReadWrite",
             "User.Read"
         ]
-        self.token = None
-        self.token_expires_at = 0
-        self.app = msal.PublicClientApplication(self.client_id, authority=self.authority)
+        self.refresh_token = refresh_token
+        self.token = token
+        self.email = email
+        self.app = msal.PublicClientApplication(MS_CLIENT_ID, authority=self.authority)
 
-    def get_token(self):
-        current_time = time.time()
-        if self.token and self.token_expires_at > current_time + 300:
-            return self.token
+    async def validate_token(self, token: str):
+        if not token:
+            raise HTTPException(detail="❌ Token is missing", status_code=404)
         
-        # Step 1: Initiate Device Flow
-        flow = self.app.initiate_device_flow(scopes=self.scopes)
-        if "user_code" not in flow:
-            raise Exception("❌ Failed to create device flow. Check your client ID or scopes.")
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                "https://graph.microsoft.com/v1.0/me",
+                headers={"Authorization": f"Bearer {token}"}
+            )
+        if response.status_code == 200:
+            print("✅ Token is valid")
+            return True
+        else:
+            print(f"❌ Token is invalid: {response.status_code} - {response.text}")
+            return False
 
-        script_path = os.path.join("app", "scripts", "graph_auth.py")
-        subprocess.Popen([
-            sys.executable,
-            script_path,
-            flow['verification_uri'],
-            flow['user_code'],
-            USER_EMAIL,
-            USER_PASS
-        ])
-        print(f"\n👉 To sign in, visit {flow['verification_uri']} and enter the code: {flow['user_code']}\n")
-
-        # Step 2: Wait for user to sign in
-        result = self.app.acquire_token_by_device_flow(flow)
+    def get_new_token(self):
+        result = self.app.acquire_token_by_refresh_token(refresh_token=self.refresh_token, scopes=self.scopes)
+        print('--------------')
+        print(result)
 
         if "access_token" in result:
             self.token = result["access_token"]
-            self.token_expires_at = current_time + result.get("expires_in", 3600)
-            print("✅ Logged in successfully with delegated permissions!")
+            print("✅ Generated new token successfully!")
+            supabase_service.update_access_token(self.email, self.token)
             return self.token
         else:
             raise Exception("❌ Could not get token: " + str(result))
-
-    def get_headers(self):
-        token = self.get_token()
+    
+    async def get_headers(self):
+        token = self.token
+        is_valid_token = await self.validate_token(token)
+        if not is_valid_token:
+            token = self.get_new_token()
         return {
             "Authorization": f"Bearer {token}",
             "Content-Type": "application/json"
         }
 
     async def make_request(self, method, endpoint, data=None, params=None):
-        import httpx
-
-        headers = self.get_headers()
+        headers = await self.get_headers()
         url = f"https://graph.microsoft.com/v1.0/{endpoint}"
 
         async with httpx.AsyncClient() as client:
@@ -84,5 +79,3 @@ class GraphAuth:
         if response.content and response.content.strip():
             return response.json()
         return None
-
-graph_auth = GraphAuth()

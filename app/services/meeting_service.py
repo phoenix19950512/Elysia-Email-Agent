@@ -1,13 +1,11 @@
 import datetime
-from app.auth.graph_auth import graph_auth
+from app.auth.graph_auth import GraphAuth
 from app.models.schema import MeetingDetails, MeetingNotes
-from app.services.activity_service import activity_service
-from config import USER_EMAIL
+from app.services.supabase_service import supabase_service
 
 class MeetingService:
-    def __init__(self):
+    def __init__(self, graph_auth: GraphAuth):
         self.auth = graph_auth
-        self.user_email = USER_EMAIL
 
     async def get_upcoming_meetings(self, days: int = 7):
         now = datetime.datetime.now(datetime.timezone.utc)
@@ -52,7 +50,7 @@ class MeetingService:
         return meetings
 
     def join_meeting(self, meeting_url):
-        activity_service.log_activity('user123', 'join_meeting', f"Joined a meeting: {meeting_url}")
+        supabase_service.log_activity(self.auth.email, "join_meeting", f"Joined a meeting: {meeting_url}")
         return {
             "status": "ready_to_join",
             "meeting_url": meeting_url,

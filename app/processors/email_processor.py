@@ -1,9 +1,10 @@
 import asyncio
-import json
 import os
 import random
 from datetime import datetime, timezone, timedelta
-from app.services.email_service import email_service
+from app.auth.graph_auth import GraphAuth
+from app.services.email_service import EmailService
+from app.services.supabase_service import supabase_service
 
 class EmailProcessor:
     def __init__(self) -> None:
@@ -17,35 +18,35 @@ class EmailProcessor:
         self.running = True
         print("Starting email processor")
         while self.running:
-            folders = await email_service.get_folders()
-            if not folders:
-                print('No folders')
+            users = supabase_service.get_all_users()
+            if not users:
+                print('No users')
                 await asyncio.sleep(self.check_interval)
                 continue
-            folder = next((f for f in folders if f["displayName"].lower() == 'inbox'), None)
-            if not folder:
-                print('No inbox folder')
-                await asyncio.sleep(self.check_interval)
-                continue
-            try:
-                # Get a new database session for this iteration
-                print('Fetching settings file')
-                settings_path = os.path.join(os.getcwd(), "user_settings", "user123_settings.json")
-                if os.path.exists(settings_path):
-                    with open(settings_path, 'r') as f:
-                        settings = json.load(f)
-                        turn_on = settings.get("turn_on", True)
-                        email_rules = settings.get("email_rules", [])
-                        followup_schedules = settings.get("schedules", [])
-                        templates = settings.get("templates", [])
-                else:
-                    email_rules = []
-                    followup_schedules = []
-                    templates = []
-                    turn_on = True
-                
-                if turn_on == True:
-                    emails = await email_service.get_emails(folder['id'])
+
+            for user in users:
+                try:
+                    email = user["email"]
+                    access_token = user["access_token"]
+                    refresh_token = user["refresh_token"]
+                    settings_on = user["automation"]
+                    if not settings_on:
+                        print('Automation is off')
+                        continue
+                    graph_auth = GraphAuth(user["email"], access_token, refresh_token)
+                    email_service = EmailService(graph_auth)
+                    folders = await email_service.get_folders()
+                    if not folders:
+                        print('No folders')
+                        continue
+                    folder = next((f for f in folders if f["displayName"].lower() == 'inbox'), None)
+                    if not folder:
+                        print('No inbox folder')
+                        continue
+
+                    followup_schedules = supabase_service.get_schedules(email)
+                    templates = supabase_service.get_reply_templates(email)
+                    emails = await email_service.get_emails(folder["id"])
                     print(f"{len(emails)} emails found.")
                     for email in emails:
                         if email.is_read:
@@ -55,14 +56,14 @@ class EmailProcessor:
                             await email_service.send_reply(
                                 email_id=email.id,
                                 template=templates[random.randint(0, len(templates) - 1)],
-                                send_without_approval=True
+                                send_without_approval=False
                             )
                         except Exception as e:
                             print(e)
                         try:
                             print("Setting flag")
                             for schedule in followup_schedules:
-                                days = schedule.get('days', 3)
+                                days = schedule["days"]
                                 reminder_date = datetime.now(timezone.utc) + timedelta(days=days)
                                 await email_service.set_follow_up(
                                     email_id=email.id,
@@ -78,13 +79,14 @@ class EmailProcessor:
                         print(e)
 
                     del emails
+                    del graph_auth
+                    del email_service
 
-                else:
-                    print("Setting is turned off")
+                except Exception as e:
+                    print(f"Error processing user {email}: {e}")
+                    continue
 
-            except Exception as e:
-                print(f"Error in email processor: {str(e)}")
-        
+            del users
             await asyncio.sleep(self.check_interval)
         
     def stop(self):

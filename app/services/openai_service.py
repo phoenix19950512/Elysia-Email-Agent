@@ -89,11 +89,11 @@ class OpenAIService:
         No need to add a subject. Don't include client't and my names.
         Start and end with greetings.
         
-        Template name: {template.get("name", "(No Name)")}
-        Template subject: {template.get("subject", "(No subject)")}
+        Template name: {template["name"]}
+        Template subject: {template["subject"]}
         Template content:
         ```
-        {template.get("body", "(No body)")}
+        {template["body"]}
         ```
         
         Original email subject: {email_subject}

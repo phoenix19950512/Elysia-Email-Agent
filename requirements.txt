@@ -11,3 +11,4 @@ openai==1.78.1
 python-multipart==0.0.20
 selenium==4.32.0
 deepgram-sdk==4.1.0
+pydantic[email]>=2.11.4

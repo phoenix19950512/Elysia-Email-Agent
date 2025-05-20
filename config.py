@@ -8,24 +8,14 @@ load_dotenv()
 
 # Microsoft Graph API settings
 MS_CLIENT_ID = os.getenv("MS_CLIENT_ID")
-MS_CLIENT_SECRET = os.getenv("MS_CLIENT_SECRET")
 MS_TENANT_ID = os.getenv("MS_TENANT_ID")
 MS_REDIRECT_URI = os.getenv("MS_REDIRECT_URI")
-USER_EMAIL = os.getenv("USER_EMAIL")
-USER_PASS = os.getenv("USER_PASS")
 DEEPGRAM_API_KEY = os.getenv("DEEPGRAM_API_KEY")
-
-# # Graph API scopes
-# GRAPH_SCOPES = [
-#     "Mail.ReadWrite",
-#     "Mail.Send",
-#     "MailboxSettings.ReadWrite",
-#     "Calendars.ReadWrite",
-#     "Files.ReadWrite",
-#     "User.Read"
-# ]
-
-GRAPH_SCOPES = ["https://graph.microsoft.com/.default"]
-
-# Groq API settings
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_USERNAME = os.getenv("SUPABASE_USERNAME")
+SUPABASE_PASSWORD = os.getenv("SUPABASE_PASSWORD")
+ACCESS_TOKEN_EXPIRE_MINUTES = 129600 # 90 days
+ALGORITHM = "HS512"
+SECRET_KEY = os.getenv("SECRET_KEY")
