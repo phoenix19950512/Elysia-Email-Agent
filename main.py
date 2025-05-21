@@ -71,7 +71,7 @@ async def verify_credentials():
 async def lifespan(app: FastAPI):
     print("Setting up Email AI Agent...")
     setup_templates()
-    # asyncio.create_task(verify_credentials())
+    asyncio.create_task(verify_credentials())
     print("\n--- Email AI Agent Ready ---")
     print("FastAPI Swagger docs: http://localhost:8000/docs")
     print("WebSocket: Listening on ws://localhost:8000")
