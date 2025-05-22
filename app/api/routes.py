@@ -62,12 +62,12 @@ async def signin(user: UserCreate):
     }
     access_token = create_jwt_token(data=data)
     supabase_service.create_user(user)
-    email_service = EmailService(graph_auth)
-    folders = await email_service.get_folders()
-    if not is_include_personal_folders(folders):
-        await email_service.create_folder("Urgent")
-        await email_service.create_folder("Normal")
-        await email_service.create_folder("Low Priority")
+    # email_service = EmailService(graph_auth)
+    # folders = await email_service.get_folders()
+    # if not is_include_personal_folders(folders):
+    #     await email_service.create_folder("Urgent")
+    #     await email_service.create_folder("Normal")
+    #     await email_service.create_folder("Low Priority")
     return { "access_token": access_token }
 
 @router.post("/verify-token")
