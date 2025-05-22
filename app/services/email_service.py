@@ -6,6 +6,26 @@ from app.models.schema import EmailMessage
 from app.services.openai_service import openai_service
 from app.services.supabase_service import supabase_service
 
+default_mail_boxes = [
+    "Archive",
+    "Conversation History",
+    "Deleted Items",
+    "Drafts",
+    "Inbox",
+    "Junk Email",
+    "Outbox",
+    "RSS Feeds",
+    "Sent Items",
+    "Sync Issues",
+]
+
+def filter_personal_folders(folders: list):
+    personal_folders = []
+    for folder in folders:
+        if folder["displayName"] not in default_mail_boxes:
+            personal_folders.append(folder)
+    return personal_folders
+
 class EmailService:
     def __init__(self, graph_auth: GraphAuth):
         self.auth = graph_auth
@@ -84,6 +104,9 @@ class EmailService:
     async def sort_emails(self, folders, emails):
         """Sort emails based on existing folders"""
         results = []
+        personal_folders = filter_personal_folders(folders)
+        if not personal_folders:
+            return []
 
         for email in emails:
             prompt = openai_service.generate_sort_mail_prompt(folders, email.subject, str(email.body))
