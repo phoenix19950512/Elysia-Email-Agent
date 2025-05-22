@@ -30,6 +30,25 @@ router = APIRouter()
 # Initialize services
 file_service = FileService()
 
+default_mail_boxes = [
+    "Archive",
+    "Conversation History",
+    "Deleted Items",
+    "Drafts",
+    "Inbox",
+    "Junk Email",
+    "Outbox",
+    "RSS Feeds",
+    "Sent Items",
+    "Sync Issues",
+]
+
+def is_include_personal_folders(folders: list):
+    for folder in folders:
+        if folder["displayName"] not in default_mail_boxes:
+            return True
+    return False
+
 @router.post("/signin")
 async def signin(user: UserCreate):
     graph_auth = GraphAuth(user.access_token, user.refresh_token)
@@ -43,6 +62,12 @@ async def signin(user: UserCreate):
     }
     access_token = create_jwt_token(data=data)
     supabase_service.create_user(user)
+    email_service = EmailService(graph_auth)
+    folders = await email_service.get_folders()
+    if not is_include_personal_folders(folders):
+        await email_service.create_folder("Urgent")
+        await email_service.create_folder("Normal")
+        await email_service.create_folder("Low Priority")
     return { "access_token": access_token }
 
 @router.post("/verify-token")
