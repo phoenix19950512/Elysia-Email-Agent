@@ -15,33 +15,6 @@ from app.services.openai_service import openai_service
 # Import your routes
 from app.api.routes import router as api_router
 
-def setup_templates():
-    """Set up template files if they don't exist"""
-    template_dir = os.path.join("app", "templates")
-    os.makedirs(template_dir, exist_ok=True)
-
-    email_template_path = os.path.join(template_dir, "email_templates.json")
-    if not os.path.exists(email_template_path):
-        default_templates = [
-            {
-                "name": "General Reply",
-                "subject": "RE: {original_subject}",
-                "body": "Thank you for your email. I will review it and get back to you soon.<br><br>Best regards,<br>Elysia Partners"
-            },
-            {
-                "name": "Meeting Confirmation",
-                "subject": "RE: {original_subject}",
-                "body": "I confirm that I will attend the meeting.<br><br>Best regards,<br>Elysia Partners"
-            },
-            {
-                "name": "Out of Office",
-                "subject": "RE: {original_subject}",
-                "body": "Thank you for your email. I am currently out of the office and will respond upon my return.<br><br>Best regards,<br>Elysia Partners"
-            }
-        ]
-        with open(email_template_path, "w") as f:
-            json.dump(default_templates, f, indent=4)
-
 async def start_email_processor():
     """Start the email processor"""
     await email_processor.start()
@@ -70,7 +43,6 @@ async def verify_credentials():
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("Setting up Email AI Agent...")
-    setup_templates()
     asyncio.create_task(verify_credentials())
     print("\n--- Email AI Agent Ready ---")
     print("FastAPI Swagger docs: http://localhost:8000/docs")
