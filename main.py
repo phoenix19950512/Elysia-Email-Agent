@@ -1,7 +1,7 @@
 # type: ignore
 
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 import asyncio
 import os
@@ -103,11 +103,28 @@ from fastapi.responses import FileResponse
 # Serve frontend React build if it exists
 frontend_build_path = os.path.join(os.getcwd(), "dist")
 if os.path.isdir(frontend_build_path):
-    fastapi_app.mount("/", StaticFiles(directory=frontend_build_path, html=True), name="frontend")
+    fastapi_app.mount(
+        "/assets",
+        StaticFiles(directory=os.path.join(frontend_build_path, "assets")),
+        name="assets",
+    )
 
     @fastapi_app.get("/")
     async def serve_root():
         return FileResponse(os.path.join(frontend_build_path, "index.html"))
+
+    @fastapi_app.get("/{full_path:path}", include_in_schema=False)
+    async def spa_fallback(request: Request, full_path: str):
+        """
+        - If the path corresponds to a real file under dist, serve it.
+        - Otherwise hand back index.html so React Router can take over.
+        """
+        file_path = os.path.join(frontend_build_path, full_path)
+        if os.path.isfile(file_path):
+            return FileResponse(file_path)
+        index_path = os.path.join(frontend_build_path, "index.html")
+        if os.path.isfile(index_path):
+            return FileResponse(index_path)
 
 # Create Socket.IO server
 sio = socketio.AsyncServer(async_mode='asgi', cors_allowed_origins="*")
