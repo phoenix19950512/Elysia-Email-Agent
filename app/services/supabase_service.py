@@ -198,7 +198,7 @@ class SupabaseService:
     def create_reply_template(self, template: ReplyTemplateCreate):
         try:
             template_data = supabase.table('reply_templates').insert({
-                'user_mail': template.email,
+                'user_mail': template.user_mail,
                 'name': template.name,
                 'subject': template.subject,
                 'body': template.body,
@@ -249,7 +249,7 @@ class SupabaseService:
     def create_schedule(self, schedule: FollowUpCreate):
         try:
             schedule_data = supabase.table('schedules').insert({
-                'user_mail': schedule.email,
+                'user_mail': schedule.user_mail,
                 'name': schedule.name,
                 'days': schedule.days,
                 'timestamp': 'now()'
