@@ -356,8 +356,8 @@ async def get_schedules(graph_auth: GraphAuth = Depends(get_current_graph)):
 @router.post("/schedules")
 async def add_schedule(schedule: FollowUpCreate, graph_auth: GraphAuth = Depends(get_current_graph)):
     try:
-        supabase_service.create_schedule(schedule)
-        return {"message": "Schedule added successfully"}
+        new_schedule = supabase_service.create_schedule(schedule)
+        return new_schedule
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -388,8 +388,8 @@ async def get_templates(graph_auth: GraphAuth = Depends(get_current_graph)):
 @router.post("/templates")
 async def create_template(template: ReplyTemplateCreate, graph_auth: GraphAuth = Depends(get_current_graph)):
     try:
-        template = supabase_service.create_reply_template(template)
-        return {"message": "Template created successfully"}
+        new_template = supabase_service.create_reply_template(template)
+        return new_template
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
