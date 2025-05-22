@@ -55,12 +55,13 @@ async def verify_token(graph_auth: GraphAuth = Depends(get_current_graph)):
 # Email endpoints
 @router.get("/emails")
 async def get_emails(
+    folder: str = "inbox",
     max_count: int = 25,
     graph_auth: GraphAuth = Depends(get_current_graph)
 ):
     try:
         email_service = EmailService(graph_auth)
-        emails = await email_service.get_emails('inbox', max_count)
+        emails = await email_service.get_emails(folder, max_count)
         return emails
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

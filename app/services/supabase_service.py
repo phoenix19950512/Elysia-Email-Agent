@@ -29,6 +29,19 @@ class SupabaseService:
                     'automation': True,
                     'subscription': 'none'
                 }).execute()
+                supabase.table('schedules').insert({
+                    'user_mail': user.email,
+                    'name': 'Reminder - 3 Days',
+                    'days': 3,
+                    'timestamp': 'now()'
+                }).execute()
+                supabase.table('reply_templates').insert({
+                    'user_mail': user.email,
+                    'name': 'General Reply',
+                    'subject': 'RE: {original_subject}',
+                    'body': "Thanks for your email. I'll get back to you shortly.",
+                    'timestamp': 'now()'
+                }).execute()
 
             return user_data.data[0]
         except HTTPException:
