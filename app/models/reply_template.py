@@ -2,7 +2,7 @@ from pydantic import BaseModel, EmailStr
 from datetime import datetime
 
 class ReplyTemplateCreate(BaseModel):
-    email: EmailStr
+    user_mail: EmailStr
     name: str
     subject: str
     body: str
