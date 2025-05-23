@@ -57,10 +57,16 @@ def is_include_personal_folders(folders: list):
 
 @router.post("/signin")
 async def signin(user: UserCreate):
-    graph_auth = GraphAuth(user.access_token, user.refresh_token)
+    graph_auth = GraphAuth(user.email, user.access_token, user.refresh_token)
     is_valid_token = await graph_auth.validate_token(user.access_token)
     if not is_valid_token:
         raise HTTPException(status_code=401, detail="Invalid access token")
+    email_service = EmailService(graph_auth)
+    folders = await email_service.get_folders()
+    if not is_include_personal_folders(folders):
+        await email_service.create_folder("Urgent")
+        await email_service.create_folder("Normal")
+        await email_service.create_folder("Low Priority")
     data = {
         "email": user.email,
         "access_token": user.access_token,
@@ -68,12 +74,6 @@ async def signin(user: UserCreate):
     }
     access_token = create_jwt_token(data=data)
     supabase_service.create_user(user)
-    # email_service = EmailService(graph_auth)
-    # folders = await email_service.get_folders()
-    # if not is_include_personal_folders(folders):
-    #     await email_service.create_folder("Urgent")
-    #     await email_service.create_folder("Normal")
-    #     await email_service.create_folder("Low Priority")
     return { "access_token": access_token }
 
 @router.post("/verify-token")
