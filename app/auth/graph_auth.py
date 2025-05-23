@@ -38,8 +38,6 @@ class GraphAuth:
 
     def get_new_token(self):
         result = self.app.acquire_token_by_refresh_token(refresh_token=self.refresh_token, scopes=self.scopes)
-        print('--------------')
-        print(result)
 
         if "access_token" in result:
             self.token = result["access_token"]

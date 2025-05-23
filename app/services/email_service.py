@@ -169,6 +169,54 @@ class EmailService:
             supabase_service.log_activity(self.auth.email, 'send_reply', f"Replied to mail {email_id}")
             return await self.auth.make_request("POST", endpoint, data=data)
 
+    async def send_manual_reply(self, email_id, body, send_without_approval=False):
+        """Send manually reply to an email"""
+        # First, get the email to reply to
+        email = await self.get_email_content(email_id)
+        subject = email.get("subject", "")
+        
+        # Create reply
+        if send_without_approval:
+            # Send without approval
+            endpoint = f"me/messages/{email_id}/reply"
+            data = {
+                "comment": body
+            }
+            supabase_service.log_activity(self.auth.email, 'send_reply_manual', f"Replied to mail {email_id}")
+            return await self.auth.make_request("POST", endpoint, data=data)
+        else:
+            # Create a draft reply
+            recipient = email["from"]["emailAddress"]
+            
+            endpoint = f"me/messages"
+            data = {
+                "subject": f"RE: {subject}",
+                "body": {
+                    "contentType": "HTML",
+                    "content": body
+                },
+                "toRecipients": [
+                    {
+                        "emailAddress": recipient
+                    }
+                ]
+            }
+            supabase_service.log_activity(self.auth.email, 'send_reply_manual', f"Replied to mail {email_id}")
+            return await self.auth.make_request("POST", endpoint, data=data)
+
+    async def generate_ai_reply(self, email_id: str):
+        """Generate an AI reply for an email"""
+        email = await self.get_email_content(email_id)
+        user = await self.auth.make_request("GET", "me")
+        prompt = openai_service.generate_ai_reply(
+            email.get("subject", ""),
+            email.get("body", {}).get("content", ""),
+            user
+        )
+        messages = [{'role': 'user', 'content': prompt}]
+        reply = await openai_service.get_openai_response(messages)
+        return reply
+
     async def set_follow_up(self, email_id, reminder_date, note=None):
         """Set a follow-up flag for an email"""
         endpoint = f"me/messages/{email_id}"

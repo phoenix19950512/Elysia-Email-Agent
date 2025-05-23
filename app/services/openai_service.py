@@ -104,6 +104,26 @@ class OpenAIService:
 
         Generate a personalized reply based on the template.
         Don't include your explanations so that I can send your response to the recipient without any processing."""
+
+    def generate_ai_reply(self, email_subject: str, email_content: str, user):
+        return f"""
+        You need to create a personalized reply
+        to the email content below. Maintain a professional tone.
+        No need to add a subject. Don't include client't and my names.
+        Start and end with greetings.
+
+        Original email subject: {email_subject}
+        Original email content:
+        ```
+        {email_content}
+        ```
+
+        My info:
+        ```
+        {user}
+        ```
+
+        Don't include your explanations so that I can send your response to the recipient without any processing."""
     
     def generate_sort_mail_prompt(self, folders: list, email_subject: str, email_content: str):
         return f"""

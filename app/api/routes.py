@@ -2,6 +2,7 @@
 
 from fastapi import APIRouter, Depends, HTTPException, File, UploadFile, Form, Body
 from pydantic import BaseModel
+from typing import Optional
 
 from app.api.auth import get_current_graph, create_jwt_token
 from app.auth.graph_auth import GraphAuth
@@ -24,6 +25,11 @@ class FollowUp(BaseModel):
     email_id: str
     reminder_date: int
     note: str
+
+class Reply(BaseModel):
+    email_id: str
+    body: str
+    send_without_approval: bool
 
 router = APIRouter()
 
@@ -195,31 +201,35 @@ async def create_folder(
 
 @router.post("/reply-email")
 async def reply_email(
-    email_id: str = Form(...),
-    template_name: str = Form(...), 
-    send_without_approval: bool = Form(False),
+    data: Reply,
     graph_auth: GraphAuth = Depends(get_current_graph)
 ):
     try:
-        templates = supabase_service.get_reply_templates(graph_auth.email)
         email_service = EmailService(graph_auth)
-        
-        # Find the requested template
-        template = next((t for t in templates if t["name"] == template_name), None)
-        if not template:
-            raise HTTPException(status_code=404, detail="Template not found")
-        
+
         # Send reply
-        result = await email_service.send_reply(
-            email_id,
-            template,
-            send_without_approval
+        result = await email_service.send_manual_reply(
+            data.email_id,
+            data.body,
+            data.send_without_approval
         )
         
         return {
-            "status": "sent" if send_without_approval else "draft_created",
+            "status": "sent" if data.send_without_approval else "draft_created",
             "result": result
         }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/ai-reply")
+async def get_ai_reply(
+    email_id: str,
+    graph_auth: GraphAuth = Depends(get_current_graph)
+):
+    try:
+        email_service = EmailService(graph_auth)
+        result = await email_service.generate_ai_reply(email_id)
+        return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
